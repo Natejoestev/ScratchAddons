@@ -2,9 +2,9 @@
 
 import WorkspaceQuerier, { QueryResult } from "./WorkspaceQuerier.js";
 import renderBlock, { BlockComponent, getBlockHeight } from "./BlockRenderer.js";
-import { BlockInstance, BlockShape, BlockTypeInfo } from "./BlockTypeInfo.js";
+import { BlockInstance, BlockTypeInfo } from "./BlockTypeInfo.js";
 
-export default async function ({ addon, msg, console }) {
+export default async function ({ addon, msg }) {
   const Blockly = await addon.tab.traps.getBlockly();
   const vm = addon.tab.traps.vm;
 

@@ -118,13 +118,16 @@ const BlockShapes = {
 /**
  * Gets the block shape info from {@link BlockShapes} given a {@link BlockShape}.
  * @param {BlockShape} shape
+ * @param {boolean} isVertical render block vertically
  */
 function getShapeInfo(shape, isVertical) {
-  if (shape === BlockShape.Round) return BlockShapes.Round;
-  if (shape === BlockShape.Boolean) return BlockShapes.Boolean;
-  if (shape === BlockShape.Stack) return isVertical ? BlockShapes.Stack : BlockShapes.HorizontalBlock;
-  if (shape === BlockShape.Hat) return BlockShapes.Hat;
-  if (shape === BlockShape.End) return isVertical ? BlockShapes.End : BlockShapes.HorizontalBlockEnd;
+  switch (shape) {
+    case BlockShape.Round: return BlockShapes.Round;
+    case BlockShape.Boolean: return BlockShapes.Boolean;
+    case BlockShape.Stack: return isVertical ? BlockShapes.Stack : BlockShapes.HorizontalBlock;
+    case BlockShape.Hat: return BlockShapes.Hat;
+    case BlockShape.End: return isVertical ? BlockShapes.End : BlockShapes.HorizontalBlockEnd;
+  }
   throw new Error(shape);
 }
 
@@ -163,12 +166,13 @@ export class BlockComponent {
 /**
  * Creates a BlockComponent with some text. Like the 'label' element in the make a block menu.
  * @param {string} text The contents of the component.
+ * @param {string} fillVar name of variable to use for fill color
  * @param {SVGElement} container The element to add the text to.
  * @returns {BlockComponent} The BlockComponent.
  */
 function createTextComponent(text, fillVar, container) {
   let textElement = container.appendChild(document.createElementNS(SVG_NS, "text"));
-  textElement.setAttribute("class", "blocklyText");
+  textElement.classList.add("blocklyText");
   textElement.style.fill = `var(${fillVar})`;
   textElement.setAttribute("dominant-baseline", "middle");
   textElement.setAttribute("dy", 1);
@@ -182,6 +186,7 @@ const textWidthCacheSize = 1000;
 /**
  * Gets the width of an svg text element, with caching.
  * @param {SVGTextElement} textElement
+ * @returns {number} width of text svg
  */
 function getTextWidth(textElement) {
   let string = textElement.innerHTML;
@@ -245,8 +250,7 @@ function createBackedTextedComponent(text, container, shape, categoryClass, fill
     textElement.dom.setAttribute("x", (shape.minWidth - textElement.width) / 2);
   }
 
-  const blockElement = createBlockComponent(blockContainer, shape, categoryClass, fill, stroke, textElement.width);
-  return blockElement;
+  return createBlockComponent(blockContainer, shape, categoryClass, fill, stroke, textElement.width);
 }
 
 /**
@@ -256,7 +260,7 @@ function createBackedTextedComponent(text, container, shape, categoryClass, fill
  * @returns {BlockComponent} The renderered block
  */
 export default function renderBlock(block, container) {
-  var blockComponent = _renderBlock(block, container, block.typeInfo.category, true);
+  var blockComponent = _renderBlock(block, container, true);
   blockComponent.dom.classList.add("sa-block-color");
   blockComponent.dom.setAttribute("transform", `translate(${blockComponent.padding}, 0)`);
   return blockComponent;
@@ -266,10 +270,10 @@ export default function renderBlock(block, container) {
  * Renders a block, with the center of it's leftmost side located at 0, 0.
  * @param {BlockInstance} block
  * @param {SVGAElement} container
- * @param {string} parentCategory The category of this blocks parnet. If no parent, than this blocks category.
+ * @param {boolean} isVertical render block vertically
  * @returns {BlockComponent} The rendered component.
  */
-function _renderBlock(block, container, parentCategory, isVertical) {
+function _renderBlock(block, container, isVertical) {
   const blockContainer = container.appendChild(createBlockContainer());
   const shape = getShapeInfo(block.typeInfo.shape, isVertical);
   const category = block.typeInfo.category;
@@ -287,7 +291,7 @@ function _renderBlock(block, container, parentCategory, isVertical) {
     } else {
       const blockInput = block.inputs[inputIdx++];
       if (blockInput instanceof BlockInstance) {
-        component = _renderBlock(blockInput, blockContainer, block.typeInfo.category, false);
+        component = _renderBlock(blockInput, blockContainer, false);
       } else if (blockPart instanceof BlockInputEnum) {
         if (blockPart.isRound) {
           component = createBackedTextedComponent(
